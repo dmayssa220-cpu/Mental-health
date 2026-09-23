@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: mh_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: mental_health_db
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mh-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend .NET
+  backend:
+    build: ./backend
+    container_name: mh_backend
+    restart: always
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=mental_health_db;User=${DB_USER};Password=${DB_PASSWORD};
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    networks:
+      - mh-network
+
+  # Service IA (Python)
+  ai-service:
+    build: ./ai-service
+    container_name: mh_ai
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_NAME=mistral
+    networks:
+      - mh-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+
+  # Frontend React (Nginx)
+  frontend:
+    build: ./frontend
+    container_name: mh_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mh-network
+
+networks:
+  mh-network:
+    driver: bridge
+
+volumes:
+  db-data:
