@@ -19,7 +19,7 @@ services:
     networks:
       - mh-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${DB_USER} -p${DB_PASSWORD} --silent"]
       interval: 10s
       timeout: 5s
       retries: 5
