@@ -7,6 +7,7 @@ import Mood from './pages/Mood';
 import Doctors from './pages/Doctors';
 import Conversations from './pages/Conversations';
 import Chat from './pages/Chat';
+import DoctorDashboard from './pages/DoctorDashboard';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useSignalR } from './hooks/useSignalR';
