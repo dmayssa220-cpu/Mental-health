@@ -14,7 +14,11 @@ public class AppDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<MessageReaction> MessageReactions => Set<MessageReaction>();
     public DbSet<MessageAttachment> MessageAttachments => Set<MessageAttachment>();
-
+    
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<DoctorAvailability> DoctorAvailabilities => Set<DoctorAvailability>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<VideoSession> VideoSessions => Set<VideoSession>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -66,5 +70,29 @@ public class AppDbContext : DbContext
             .WithMany(m => m.Attachments)
             .HasForeignKey(a => a.MessageId)
             .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Appointment>()
+    .HasOne(a => a.Patient)
+    .WithMany()
+    .HasForeignKey(a => a.PatientId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+modelBuilder.Entity<Appointment>()
+    .HasOne(a => a.Doctor)
+    .WithMany()
+    .HasForeignKey(a => a.DoctorId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+    modelBuilder.Entity<Appointment>()
+    .HasIndex(a => new { a.DoctorId, a.ScheduledAt });
+
+    modelBuilder.Entity<DoctorAvailability>()
+    .HasOne(d => d.Doctor)
+    .WithMany()
+    .HasForeignKey(d => d.DoctorId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+     modelBuilder.Entity<DoctorAvailability>()
+    .HasIndex(d => new { d.DoctorId, d.DayOfWeek, d.StartTime })
+    .IsUnique();
     }
 }

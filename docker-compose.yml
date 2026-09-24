@@ -34,6 +34,16 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=db;Database=mental_health_db;User=${DB_USER};Password=${DB_PASSWORD};
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
+      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
+      - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET}
+      - Jitsi__Domain=${JITSI_DOMAIN:-meet.jit.si}
+      - Frontend__BaseUrl=${FRONTEND_URL:-http://localhost}
+      - Smtp__Host=${SMTP_HOST:-}
+      - Smtp__Port=${SMTP_PORT:-587}
+      - Smtp__User=${SMTP_USER:-}
+      - Smtp__Password=${SMTP_PASSWORD:-}
+      - Smtp__From=${SMTP_FROM:-noreply@mindcare.app}
     volumes:
       - uploads-data:/app/uploads
     depends_on:
@@ -43,7 +53,6 @@ services:
         condition: service_healthy
     networks:
       - mh-network
-
   # Service IA (Python)
   ai-service:
     build: ./ai-service

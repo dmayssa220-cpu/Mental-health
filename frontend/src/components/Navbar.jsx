@@ -47,6 +47,7 @@ export default function Navbar() {
               <Link to="/mood" className="hover:text-calm-primary">Humeur</Link>
               <Link to="/journal" className="hover:text-calm-primary">Journal</Link>
               <Link to="/doctors" className="hover:text-calm-primary">Docteurs</Link>
+              <Link to="/appointments" className="hover:text-calm-primary">Rendez-vous</Link>
             </>}
             <Link to="/conversations" className="hover:text-calm-primary relative"
             >

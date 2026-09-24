@@ -21,6 +21,10 @@ export default function Doctors() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {doctors.map((d) => (
           <div key={d.id} className="bg-white rounded-2xl p-6 shadow-sm">
+            <Link to={`/appointments/new/${d.id}`}
+  className="mt-2 w-full py-2 rounded-xl bg-calm-accent text-calm-dark hover:opacity-80 transition text-center block">
+  📅 Prendre RDV
+</Link>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-calm-secondary/50 flex items-center justify-center text-2xl">
                 👩‍⚕️

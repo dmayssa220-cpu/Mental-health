@@ -12,7 +12,12 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useSignalR } from './hooks/useSignalR';
 import { useAuth } from './context/AuthContext';
-
+import Appointments from './pages/Appointments';
+import DoctorSchedule from './pages/DoctorSchedule';
+import BookAppointment from './pages/BookAppointment';
+import VideoCall from './pages/VideoCall';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
 function HomeRedirect() {
   const { user } = useAuth();
   return <Navigate to={user?.role === 'Doctor' ? '/doctor/dashboard' : '/dashboard'} replace />;
@@ -35,6 +40,12 @@ export default function App() {
           <Route path="/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
           <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/doctor/dashboard" element={<ProtectedRoute roles={['Doctor']}><DoctorDashboard /></ProtectedRoute>} />
+          <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+<Route path="/appointments/new/:doctorId" element={<ProtectedRoute roles={['Patient']}><BookAppointment /></ProtectedRoute>} />
+<Route path="/doctor/schedule" element={<ProtectedRoute roles={['Doctor']}><DoctorSchedule /></ProtectedRoute>} />
+<Route path="/video/:appointmentId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
+<Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+<Route path="/payment/cancel" element={<ProtectedRoute><PaymentCancel /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
