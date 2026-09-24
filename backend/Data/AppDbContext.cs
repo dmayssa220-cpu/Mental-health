@@ -12,6 +12,8 @@ public class AppDbContext : DbContext
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<MessageReaction> MessageReactions => Set<MessageReaction>();
+    public DbSet<MessageAttachment> MessageAttachments => Set<MessageAttachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +49,22 @@ public class AppDbContext : DbContext
             .HasOne(m => m.Conversation)
             .WithMany(c => c.Messages)
             .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MessageReaction>()
+            .HasIndex(r => new { r.MessageId, r.UserId, r.Emoji })
+            .IsUnique();
+
+        modelBuilder.Entity<MessageReaction>()
+            .HasOne(r => r.Message)
+            .WithMany(m => m.Reactions)
+            .HasForeignKey(r => r.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MessageAttachment>()
+            .HasOne(a => a.Message)
+            .WithMany(m => m.Attachments)
+            .HasForeignKey(a => a.MessageId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

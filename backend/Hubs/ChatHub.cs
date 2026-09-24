@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MentalHealth.API.Data;
 using MentalHealth.API.Models;
+using MentalHealth.API.Services;
 
 namespace MentalHealth.API.Hubs;
 
@@ -11,11 +12,13 @@ public class ChatHub : Hub
 {
     private readonly AppDbContext _db;
     private readonly ILogger<ChatHub> _logger;
+    private readonly IAIService _ai;
 
-    public ChatHub(AppDbContext db, ILogger<ChatHub> logger)
+    public ChatHub(AppDbContext db, ILogger<ChatHub> logger, IAIService ai)
     {
         _db = db;
         _logger = logger;
+        _ai = ai;
     }
 
     private int CurrentUserId =>
@@ -80,6 +83,17 @@ public class ChatHub : Hub
         if (conv == null) throw new HubException("Conversation introuvable.");
         if (conv.PatientId != CurrentUserId && conv.DoctorId != CurrentUserId)
             throw new HubException("Accès non autorisé.");
+        if (conv.IsPatientBanned && conv.PatientId == CurrentUserId)
+            throw new HubException("Vous ne pouvez plus envoyer de messages dans cette conversation.");
+        if (await _ai.IsMessageInappropriateAsync(content))
+        {
+            if (conv.PatientId == CurrentUserId)
+            {
+                conv.IsPatientBanned = true;
+                await _db.SaveChangesAsync();
+            }
+            throw new HubException("Message bloqué par la modération automatique.");
+        }
 
         var msg = new Message
         {
@@ -87,7 +101,8 @@ public class ChatHub : Hub
             SenderId = CurrentUserId,
             Content = content.Trim(),
             SentAt = DateTime.UtcNow,
-            IsFromAI = false
+            IsFromAI = false,
+            IsRead = false
         };
 
         _db.Messages.Add(msg);
@@ -102,6 +117,7 @@ public class ChatHub : Hub
             msg.SentAt,
             msg.ConversationId,
             msg.SenderId,
+            msg.IsRead,
             SenderName = CurrentUserName
         };
 
@@ -141,11 +157,27 @@ public class ChatHub : Hub
         var conv = await _db.Conversations.FindAsync(conversationId);
         if (conv == null) return;
 
+        if (conv.PatientId != CurrentUserId && conv.DoctorId != CurrentUserId)
+            throw new HubException("Accès non autorisé.");
+
+        var messageIds = await _db.Messages
+            .Where(m => m.ConversationId == conversationId && m.SenderId != CurrentUserId && !m.IsRead)
+            .Select(m => m.Id)
+            .ToListAsync();
+
+        await _db.Messages
+            .Where(m => m.ConversationId == conversationId && m.SenderId != CurrentUserId && !m.IsRead)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(m => m.IsRead, true)
+                .SetProperty(m => m.ReadAt, DateTime.UtcNow));
+
         var otherId = conv.PatientId == CurrentUserId ? conv.DoctorId : conv.PatientId;
         await Clients.Group($"user-{otherId}").SendAsync("MessagesRead", new
         {
             conversationId,
+            messageIds,
             readerId = CurrentUserId
+            ,readAt = DateTime.UtcNow
         });
     }
 }

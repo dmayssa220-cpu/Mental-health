@@ -18,12 +18,17 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
   const [sending, setSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isPatientBanned, setIsPatientBanned] = useState(false);
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   // --- Chargement initial REST ---
   const loadConversation = useCallback(() => {
-    client.get(`/conversations/${id}`).then((r) => setConversation(r.data));
+    client.get(`/conversations/${id}`).then((r) => {
+      setConversation(r.data);
+      setIsPatientBanned(r.data.isPatientBanned);
+    });
   }, [id]);
 
   const loadMessages = useCallback(() => {
@@ -33,6 +38,9 @@ export default function Chat() {
   useEffect(() => {
     loadConversation();
     loadMessages();
+    client.post(`/conversations/${id}/read`)
+      .then(() => window.dispatchEvent(new Event('messages-read')))
+      .catch(() => {});
   }, [loadConversation, loadMessages]);
 
   // --- SignalR : join + écoute ---
@@ -65,10 +73,21 @@ export default function Chat() {
       }
     });
 
+    const offRead = signalRService.on('read', (data) => {
+      if (Number(data.conversationId) !== Number(id)) return;
+      const readIds = new Set(data.messageIds || []);
+      setMessages((current) => current.map((message) => (
+        readIds.has(message.id)
+          ? { ...message, isRead: true, readAt: data.readAt }
+          : message
+      )));
+    });
+
     return () => {
       offMsg();
       offTyping();
       offStatus();
+      offRead();
       signalRService.leaveConversation(Number(id));
     };
   }, [id, user?.userId, conversation?.otherUser?.id]);
@@ -81,10 +100,19 @@ export default function Chat() {
   // --- Envoi de message via SignalR ---
   const send = async (e) => {
     e.preventDefault();
-    if (!text.trim() || sending) return;
+    if ((!text.trim() && !selectedFile) || sending) return;
     setSending(true);
     try {
-      await signalRService.sendMessage(Number(id), text.trim());
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('content', text.trim());
+        formData.append('files', selectedFile);
+        await client.post(`/conversations/${id}/messages/with-attachments`, formData);
+        setSelectedFile(null);
+        loadMessages();
+      } else {
+        await signalRService.sendMessage(Number(id), text.trim());
+      }
       setText('');
       signalRService.sendTyping(Number(id), false);
     } catch (err) {
@@ -96,6 +124,21 @@ export default function Chat() {
     } finally {
       setSending(false);
     }
+  };
+
+  const reactToMessage = async (messageId, emoji) => {
+    await client.post(`/conversations/${id}/messages/${messageId}/reactions`, { emoji });
+    loadMessages();
+  };
+
+  const downloadAttachment = async (attachment) => {
+    const response = await client.get(attachment.url, { responseType: 'blob' });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.originalName;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   // --- Indicateur de frappe ---
@@ -204,7 +247,8 @@ export default function Chat() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((m) => (
-          <ChatBubble key={m.id} message={m} isMe={m.senderId === user?.userId} />
+          <ChatBubble key={m.id} message={m} isMe={m.senderId === user?.userId}
+            onReact={reactToMessage} onDownload={downloadAttachment} />
         ))}
         {isTyping && (
           <div className="flex justify-start">
@@ -219,6 +263,9 @@ export default function Chat() {
       </div>
 
       {/* Formulaire */}
+      {user?.role === 'Patient' && isPatientBanned && (
+        <p className="px-4 pt-3 text-sm text-red-600">L’envoi est bloqué par la modération automatique.</p>
+      )}
       <form onSubmit={send} className="p-4 border-t border-calm-secondary/20 flex gap-2">
         <input
           value={text}
@@ -226,10 +273,11 @@ export default function Chat() {
           placeholder="Écrivez un message..."
           className="flex-1 px-4 py-2 rounded-xl border border-calm-secondary/40 focus:ring-2 focus:ring-calm-primary"
         />
-        <button type="submit" disabled={sending || !text.trim()}
+        <input type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} className="max-w-32 text-xs" />
+        <button type="submit" disabled={sending || (!text.trim() && !selectedFile) || (user?.role === 'Patient' && isPatientBanned)}
           className="px-4 py-2 rounded-xl bg-calm-primary text-white hover:bg-calm-dark transition disabled:opacity-50"
         >
-          Envoyer
+          {user?.role === 'Patient' && isPatientBanned ? 'Banni' : 'Envoyer'}
         </button>
       </form>
     </div>

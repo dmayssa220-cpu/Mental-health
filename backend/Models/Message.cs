@@ -13,6 +13,10 @@ public class Message
 
     public bool IsFromAI { get; set; } = false;
 
+    public bool IsRead { get; set; } = false;
+
+    public DateTime? ReadAt { get; set; }
+
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(Conversation))]
@@ -22,4 +26,7 @@ public class Message
     [ForeignKey(nameof(Sender))]
     public int SenderId { get; set; }
     public User? Sender { get; set; }
+
+    public ICollection<MessageReaction> Reactions { get; set; } = new List<MessageReaction>();
+    public ICollection<MessageAttachment> Attachments { get; set; } = new List<MessageAttachment>();
 }

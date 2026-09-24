@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from textblob import TextBlob
 import random
+import re
 
 app = FastAPI(title="Mental Health AI Service")
 
@@ -37,6 +38,15 @@ def analyze_sentiment(text: str) -> str:
         return "negative"
     return "neutral"
 
+INAPPROPRIATE_PATTERNS = [
+    r"\b(?:connard|connasse|salope|encule|pute|merde|idiot|imbecile)\b",
+    r"\b(?:kill|tuer|je vais te tuer|je vais vous tuer)\b",
+]
+
+def is_inappropriate(text: str) -> bool:
+    normalized = text.lower()
+    return any(re.search(pattern, normalized) for pattern in INAPPROPRIATE_PATTERNS)
+
 @app.get("/")
 def root():
     return {"status": "ok", "service": "mental-health-ai"}
@@ -57,3 +67,7 @@ def chat(req: TextRequest):
         "response": advice,
         "sentiment": sentiment
     }
+
+@app.post("/moderate")
+def moderate(req: TextRequest):
+    return {"isInappropriate": is_inappropriate(req.text)}

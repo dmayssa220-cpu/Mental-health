@@ -34,6 +34,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=db;Database=mental_health_db;User=${DB_USER};Password=${DB_PASSWORD};
+    volumes:
+      - uploads-data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -77,3 +79,4 @@ networks:
 
 volumes:
   db-data:
+  uploads-data:

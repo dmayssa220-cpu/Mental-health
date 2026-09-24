@@ -16,8 +16,9 @@ public class UsersController : ControllerBase
     [HttpGet("doctors")]
     public async Task<IActionResult> GetDoctors()
     {
+        var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
         var doctors = await _db.Users
-            .Where(u => u.Role == "Doctor")
+            .Where(u => u.Role == "Doctor" && u.Id != currentUserId)
             .Select(u => new { u.Id, u.FullName, u.Email, u.Speciality, u.Bio })
             .ToListAsync();
         return Ok(doctors);

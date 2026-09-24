@@ -49,4 +49,21 @@ public class AIService : IAIService
             return "neutral";
         }
     }
+
+    public async Task<bool> IsMessageInappropriateAsync(string text)
+    {
+        var payload = JsonSerializer.Serialize(new { text });
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        try
+        {
+            var resp = await _http.PostAsync("/moderate", content);
+            resp.EnsureSuccessStatusCode();
+            using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+            return doc.RootElement.GetProperty("isInappropriate").GetBoolean();
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

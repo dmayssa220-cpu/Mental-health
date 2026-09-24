@@ -14,8 +14,8 @@ export default function Register() {
     e.preventDefault();
     setError('');
     try {
-      await register(form);
-      navigate('/dashboard');
+      const registeredUser = await register(form);
+      navigate(registeredUser.role === 'Doctor' ? '/doctor/dashboard' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || "Erreur d'inscription");
     }

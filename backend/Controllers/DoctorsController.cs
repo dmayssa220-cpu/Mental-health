@@ -26,7 +26,7 @@ public class DoctorsController : ControllerBase
             .ToListAsync();
 
         var patients = await _db.Users
-            .Where(u => patientIds.Contains(u.Id))
+            .Where(u => patientIds.Contains(u.Id) && u.Role == "Patient")
             .Select(u => new
             {
                 u.Id, u.FullName, u.Email,

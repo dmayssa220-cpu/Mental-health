@@ -3,6 +3,7 @@ using System;
 using MentalHealth.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MentalHealth.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924135446_AddMessageReadStatus")]
+    partial class AddMessageReadStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,6 @@ namespace MentalHealth.API.Migrations
 
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsPatientBanned")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastMessageAt")
                         .HasColumnType("datetime(6)");
@@ -99,9 +99,6 @@ namespace MentalHealth.API.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<DateTime?>("ReadAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
 
@@ -115,78 +112,6 @@ namespace MentalHealth.API.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("MentalHealth.API.Models.MessageAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("MessageId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("OriginalName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("StoragePath")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("StoredName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
-
-                    b.ToTable("MessageAttachments");
-                });
-
-            modelBuilder.Entity("MentalHealth.API.Models.MessageReaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Emoji")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("varchar(16)");
-
-                    b.Property<int>("MessageId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("MessageId", "UserId", "Emoji")
-                        .IsUnique();
-
-                    b.ToTable("MessageReactions");
                 });
 
             modelBuilder.Entity("MentalHealth.API.Models.MoodEntry", b =>
@@ -305,36 +230,6 @@ namespace MentalHealth.API.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("MentalHealth.API.Models.MessageAttachment", b =>
-                {
-                    b.HasOne("MentalHealth.API.Models.Message", "Message")
-                        .WithMany("Attachments")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Message");
-                });
-
-            modelBuilder.Entity("MentalHealth.API.Models.MessageReaction", b =>
-                {
-                    b.HasOne("MentalHealth.API.Models.Message", "Message")
-                        .WithMany("Reactions")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MentalHealth.API.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Message");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("MentalHealth.API.Models.MoodEntry", b =>
                 {
                     b.HasOne("MentalHealth.API.Models.User", "User")
@@ -349,13 +244,6 @@ namespace MentalHealth.API.Migrations
             modelBuilder.Entity("MentalHealth.API.Models.Conversation", b =>
                 {
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("MentalHealth.API.Models.Message", b =>
-                {
-                    b.Navigation("Attachments");
-
-                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("MentalHealth.API.Models.User", b =>

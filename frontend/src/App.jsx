@@ -11,6 +11,13 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useSignalR } from './hooks/useSignalR';
+import { useAuth } from './context/AuthContext';
+
+function HomeRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={user?.role === 'Doctor' ? '/doctor/dashboard' : '/dashboard'} replace />;
+}
+
 export default function App() {
   useSignalR();
   return (
@@ -20,14 +27,14 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/mood" element={<ProtectedRoute><Mood /></ProtectedRoute>} />
-          <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-          <Route path="/doctors" element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="/dashboard" element={<ProtectedRoute roles={['Patient']}><Dashboard /></ProtectedRoute>} />
+          <Route path="/mood" element={<ProtectedRoute roles={['Patient']}><Mood /></ProtectedRoute>} />
+          <Route path="/journal" element={<ProtectedRoute roles={['Patient']}><Journal /></ProtectedRoute>} />
+          <Route path="/doctors" element={<ProtectedRoute roles={['Patient']}><Doctors /></ProtectedRoute>} />
           <Route path="/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
           <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/doctor/dashboard" element={<ProtectedRoute><DoctorDashboard /></ProtectedRoute>} />
+          <Route path="/doctor/dashboard" element={<ProtectedRoute roles={['Doctor']}><DoctorDashboard /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

@@ -13,8 +13,8 @@ export default function Login() {
     e.preventDefault();
     setError('');
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      const loggedUser = await login(email, password);
+      navigate(loggedUser.role === 'Doctor' ? '/doctor/dashboard' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur de connexion');
     }

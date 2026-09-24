@@ -15,8 +15,8 @@ export default function Conversations() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-calm-dark">Mes conversations</h1>
       <div className="space-y-3">
-        {convs.map((c) => {
-          const isPatient = user?.userId === c.patient.id;
+        {convs.filter((c) => c.patient.id !== c.doctor.id).map((c) => {
+          const isPatient = user?.role === 'Patient';
           const other = isPatient ? c.doctor : c.patient;
           return (
             <Link key={c.id} to={`/chat/${c.id}`}
@@ -36,6 +36,11 @@ export default function Conversations() {
                     </p>
                   </div>
                 </div>
+                {c.unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full min-w-6 h-6 px-1 flex items-center justify-center">
+                    {c.unreadCount > 99 ? '99+' : c.unreadCount}
+                  </span>
+                )}
               </div>
             </Link>
           );
