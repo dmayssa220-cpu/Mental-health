@@ -9,8 +9,9 @@ import Conversations from './pages/Conversations';
 import Chat from './pages/Chat';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import { useSignalR } from './hooks/useSignalR';
 export default function App() {
+  useSignalR();
   return (
     <div className="min-h-screen bg-calm-bg">
       <Navbar />
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/doctors" element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
           <Route path="/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
           <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/doctor/dashboard" element={<ProtectedRoute><DoctorDashboard /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

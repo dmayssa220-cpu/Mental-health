@@ -113,4 +113,34 @@ public class ConversationsController : ControllerBase
             msg.SenderId
         });
     }
+    [HttpGet("{id}")]
+public async Task<IActionResult> GetById(int id)
+{
+    var conv = await _db.Conversations
+        .Include(c => c.Patient)
+        .Include(c => c.Doctor)
+        .FirstOrDefaultAsync(c => c.Id == id);
+
+    if (conv == null) return NotFound();
+    if (conv.PatientId != CurrentUserId && conv.DoctorId != CurrentUserId) return Forbid();
+
+    var isPatient = conv.PatientId == CurrentUserId;
+    var other = isPatient ? conv.Doctor! : conv.Patient!;
+
+    return Ok(new
+    {
+        conv.Id,
+        conv.CreatedAt,
+        conv.LastMessageAt,
+        OtherUser = new
+        {
+            other.Id,
+            other.FullName,
+            other.Role,
+            other.Speciality,
+            other.Bio
+        },
+        IsPatient = isPatient
+    });
+}
 }
