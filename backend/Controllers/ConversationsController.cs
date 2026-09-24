@@ -75,6 +75,15 @@ public class ConversationsController : ControllerBase
         var msgs = await _db.Messages
             .Where(m => m.ConversationId == id)
             .OrderBy(m => m.SentAt)
+            .Select(m => new
+            {
+                m.Id,
+                m.Content,
+                m.IsFromAI,
+                m.SentAt,
+                m.ConversationId,
+                m.SenderId
+            })
             .ToListAsync();
         return Ok(msgs);
     }
@@ -94,6 +103,14 @@ public class ConversationsController : ControllerBase
 
         conv.LastMessageAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return Ok(msg);
+        return Ok(new
+        {
+            msg.Id,
+            msg.Content,
+            msg.IsFromAI,
+            msg.SentAt,
+            msg.ConversationId,
+            msg.SenderId
+        });
     }
 }
