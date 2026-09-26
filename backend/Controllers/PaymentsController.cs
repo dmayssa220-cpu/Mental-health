@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using MentalHealth.API.Data;
 using MentalHealth.API.Models;
 using MentalHealth.API.Services;
+using Stripe;
+using Stripe.Checkout;
 
 namespace MentalHealth.API.Controllers;
 
@@ -52,14 +54,24 @@ public class PaymentsController : ControllerBase
         await _db.SaveChangesAsync();
 
         var frontendUrl = _config["Frontend:BaseUrl"] ?? "http://localhost";
-        var session = await _stripe.CreateCheckoutSessionAsync(
-            payment.Id,
-            amount,
-            "eur",
-            $"{frontendUrl}/payment/success?paymentId={payment.Id}&appointmentId={appt.Id}",
-            $"{frontendUrl}/payment/cancel?appointmentId={appt.Id}",
-            $"Consultation avec Dr. {appt.Doctor?.FullName}"
-        );
+        Session session;
+        try
+        {
+            session = await _stripe.CreateCheckoutSessionAsync(
+                payment.Id,
+                amount,
+                "eur",
+                $"{frontendUrl}/payment/success?paymentId={payment.Id}&appointmentId={appt.Id}",
+                $"{frontendUrl}/payment/cancel?appointmentId={appt.Id}",
+                $"Consultation avec Dr. {appt.Doctor?.FullName}"
+            );
+        }
+        catch (StripeException)
+        {
+            _db.Payments.Remove(payment);
+            await _db.SaveChangesAsync();
+            return StatusCode(503, new { message = "Le paiement est temporairement indisponible. Configurez une clé Stripe de test valide." });
+        }
 
         payment.StripeSessionId = session.Id;
         appt.PaymentId = payment.Id;

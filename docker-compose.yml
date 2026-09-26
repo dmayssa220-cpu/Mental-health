@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de données MySQL
   db:
@@ -20,9 +18,10 @@ services:
       - mh-network
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${DB_USER} -p${DB_PASSWORD} --silent"]
+      start_period: 45s
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 12
 
   # Backend .NET
   backend:

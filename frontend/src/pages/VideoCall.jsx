@@ -15,7 +15,10 @@ export default function VideoCall() {
         setSession(res.data);
         client.post(`/video/session/${res.data.id}/start`).catch(() => {});
       })
-      .catch((err) => setError(err.response?.data?.message || 'Impossible de rejoindre la session.'))
+      .catch((err) => setError(
+        err.response?.data?.message ||
+        'Impossible de rejoindre la session. Vérifiez que le rendez-vous est confirmé et que l’heure du rendez-vous est arrivée.'
+      ))
       .finally(() => setLoading(false));
   }, [appointmentId]);
 

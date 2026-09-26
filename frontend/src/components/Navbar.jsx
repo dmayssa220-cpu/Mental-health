@@ -49,6 +49,10 @@ export default function Navbar() {
               <Link to="/doctors" className="hover:text-calm-primary">Docteurs</Link>
               <Link to="/appointments" className="hover:text-calm-primary">Rendez-vous</Link>
             </>}
+            {isDoctor && <>
+              <Link to="/appointments" className="hover:text-calm-primary">Rendez-vous</Link>
+              <Link to="/doctor/schedule" className="hover:text-calm-primary">Gérer mes disponibilités</Link>
+            </>}
             <Link to="/conversations" className="hover:text-calm-primary relative"
             >
               Messages

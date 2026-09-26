@@ -14,6 +14,7 @@ const STATUS_LABEL = {
 export default function Appointments() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [payingId, setPayingId] = useState(null);
   const isDoctor = user?.role === 'Doctor';
 
   const load = () => client.get('/appointments/mine').then((r) => setAppointments(r.data));
@@ -28,6 +29,18 @@ export default function Appointments() {
   const updateStatus = async (id, status) => {
     await client.patch(`/appointments/${id}/status`, { status });
     load();
+  };
+
+  const pay = async (id) => {
+    setPayingId(id);
+    try {
+      const response = await client.post(`/payments/appointment/${id}/checkout`);
+      window.location.assign(response.data.url);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Impossible de démarrer le paiement.');
+    } finally {
+      setPayingId(null);
+    }
   };
 
   return (
@@ -75,6 +88,12 @@ export default function Appointments() {
                       className="px-3 py-1.5 rounded-xl bg-green-500 text-white text-sm hover:bg-green-600 transition text-center">
                       🎥 Rejoindre
                     </Link>
+                  )}
+                  {!isDoctor && a.status === 'Confirmed' && !a.paymentId && (
+                    <button onClick={() => pay(a.id)} disabled={payingId === a.id}
+                      className="px-3 py-1.5 rounded-xl bg-calm-accent text-calm-dark text-sm hover:opacity-80 disabled:opacity-50">
+                      {payingId === a.id ? 'Ouverture...' : 'Payer 50 €'}
+                    </button>
                   )}
                   {isDoctor && a.status === 'Pending' && (
                     <>

@@ -17,12 +17,18 @@ export default function BookAppointment() {
   useEffect(() => {
     client.get('/users/doctors').then((r) => {
       setDoctor(r.data.find((d) => d.id === Number(doctorId)));
-    });
+    }).catch(() => setError('Impossible de charger les informations du docteur.'));
   }, [doctorId]);
 
   useEffect(() => {
+    setError('');
     client.get(`/appointments/doctors/${doctorId}/slots`, { params: { date } })
-      .then((r) => { setSlots(r.data); setSelectedSlot(null); });
+      .then((r) => { setSlots(r.data); setSelectedSlot(null); })
+      .catch((e) => {
+        setSlots([]);
+        setSelectedSlot(null);
+        setError(e.response?.data?.message || 'Impossible de charger les créneaux disponibles.');
+      });
   }, [doctorId, date]);
 
   const book = async () => {
@@ -74,7 +80,11 @@ export default function BookAppointment() {
                 {new Date(s.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               </button>
             ))}
-            {slots.length === 0 && <p className="text-calm-dark/60 text-sm col-span-3">Aucun créneau disponible.</p>}
+            {slots.length === 0 && !error && (
+              <p className="text-calm-dark/60 text-sm col-span-3">
+                Aucun créneau disponible pour cette date. Le docteur doit d'abord définir ses disponibilités.
+              </p>
+            )}
           </div>
         </div>
 

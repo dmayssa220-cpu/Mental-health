@@ -8,8 +8,11 @@ export function useSignalR() {
   useEffect(() => {
     if (!user) return;
     signalRService.start();
+    const handlePageShow = () => signalRService.start();
+    window.addEventListener('pageshow', handlePageShow);
     return () => {
-     
+      window.removeEventListener('pageshow', handlePageShow);
+      signalRService.stop();
     };
   }, [user]);
 
